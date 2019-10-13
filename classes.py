@@ -1,7 +1,9 @@
 from PyQt5 import uic
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
+from matplotlib.patches import Arrow
+import multiprocessing
 
 
 Ui_MainWindow, QMainWindow = uic.loadUiType("form.ui")
@@ -11,7 +13,7 @@ class Particle:
     """
     Class describing a single particle
     """
-    def __init__(self, coordinates=[0, 0], speed=[0, 0], mass=1, color="red", living_time=1):
+    def __init__(self, coordinates=[0, 0], speed=[0.5, 0.5], mass=1, color="red", living_time=1):
         """
         Main constructor
         """
@@ -31,14 +33,14 @@ class Emitter:
         Main constructor
         """
         self.coordinates = coordinates
-        self.emitting_vector = emitting_vector
+        self.vector = emitting_vector
 
     def change_position(self, coordinates, vector):
         """
         Function to change position of emitting source
         """
         self.coordinates = coordinates
-        self.emitting_vector = vector
+        self.vector = vector
 
 
 class MyMainWindow(QMainWindow, Ui_MainWindow):
@@ -55,11 +57,25 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.connect_click_handlers()
 
         self.emitter = Emitter()
+        self.particleList = []
 
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
 
         self.setLayouts()
+
+        self.ax = self.figure.add_subplot(1, 1, 1)
+
+        #self.emitter_circle = plt.Circle((self.emitter.coordinates[0], self.emitter.coordinates[1]), 0.05, color='r')
+        self.emitter_vector = Arrow(self.emitter.coordinates[0], self.emitter.coordinates[1],
+                                    self.emitter.vector[0] / 20, self.emitter.vector[1] / 20, width=0.09)
+
+        #ax.add_artist(self.emitter_circle)
+        self.ax.add_artist(self.emitter_vector)
+
+        self.figure.canvas.mpl_connect('button_press_event', self.changeEmitter)
+
+
 
 
     def connect_click_handlers(self):
@@ -75,6 +91,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         vertical_layout1.addWidget(self.particleXAxisSpeedLineEdit)
         vertical_layout1.addWidget(self.particleYAxisSpeedLineEdit)
+        vertical_layout1.addWidget(self.massLabel)
         vertical_layout1.addWidget(self.particleMassSlider)
         vertical_layout1.addWidget(self.generateParticleButton)
 
@@ -115,21 +132,22 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         particle = Particle(self.emitter.coordinates, [xAxisSpeed, yAxisSpeed], mass)
 
-        # TODO: Here we draw new particle
+        self.particleList.append(particle)
 
 
     def changeEmitter(self):
         """
         Emitter position changed button click event handler
         """
+        # ------------------------ Parsing new valus ---------------------------
         try:
-            xAxis = int(self.emitterXLineEdit.text())
+            xAxis = float(self.emitterXLineEdit.text())
         except Exception:
             print("changeEmitter(): x axis is in wrong format!")
             return
 
         try:
-            yAxis = int(self.emitterYLineEdit.text())
+            yAxis = float(self.emitterYLineEdit.text())
         except Exception:
             print("changeEmitter(): y axis is in wrong format!")
             return
@@ -145,6 +163,23 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             print("changeEmitter(): y axis vector is in wrong format!")
             return
+        # -----------------------------------------------------------------------
 
+        # Changing emitter position
         self.emitter.change_position([xAxis, yAxis], [xVector, yVector])
+
+        # Removing old emitter (we have no emitter, don't do anything)
+        try:
+            self.emitter_vector.remove()
+        except Exception:
+            pass
+
+        # Creating new emitter
+        self.emitter_vector = Arrow(self.emitter.coordinates[0], self.emitter.coordinates[1],
+                                    self.emitter.vector[0] / 20, self.emitter.vector[1] / 20, width=0.09)
+        # Adding it to the plot
+        self.ax.add_artist(self.emitter_vector)
+
+        # Redraw plot
+        self.figure.canvas.draw_idle()
 
