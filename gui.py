@@ -6,7 +6,10 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Arrow
 from matplotlib.animation import FuncAnimation
 
-from scipy.integrate import odeint
+import numpy as np
+
+from classes import Particle, Emitter
+from calculations import calculate_odeint
 
 
 Ui_MainWindow, QMainWindow = uic.loadUiType("form.ui")
@@ -45,7 +48,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         self.figure.canvas.mpl_connect('button_press_event', self.changeEmitter)
 
-        self.animation = FuncAnimation(self.figure, self.draw_particles, interval=2000)
+        self.animation = FuncAnimation(self.figure, self.draw_particles, interval=1000)
+
+        self.time = 0
 
 
     def draw_particles(self, frame):
@@ -58,17 +63,13 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
-            acceleration =
+        self.particleList = calculate_odeint(self.particleList, self.time)
 
-            self.particleList[i].coordinates = [
-                self.particleList[i].coordinates[0] + self.particleList[i].speed[0],
-                self.particleList[i].coordinates[1] + self.particleList[i].speed[1]
-            ]
-
+        for i in range(len(self.particleList)):
             self.particleList[i].create_circle()
-
             self.ax.add_artist(self.particleList[i].circle)
 
+        self.time += 1
         self.figure.canvas.draw_idle()
 
 
@@ -124,7 +125,12 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         mass = self.particleMassSlider.value()
 
-        particle = Particle(self.emitter.coordinates, [xAxisSpeed, yAxisSpeed], mass)
+        particle = Particle(self.emitter.coordinates,
+                            [
+                                xAxisSpeed * np.sign(self.emitter.vector[0]),
+                                yAxisSpeed * np.sign(self.emitter.vector[1])
+                            ],
+                            mass)
 
         self.particleList.append(particle)
 
