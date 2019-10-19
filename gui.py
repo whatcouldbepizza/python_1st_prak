@@ -9,7 +9,7 @@ from matplotlib.animation import FuncAnimation
 import numpy as np
 
 from classes import Particle, Emitter
-from calculations import calculate_odeint
+from calculations import calculate_odeint, calculate_verle
 
 
 Ui_MainWindow, QMainWindow = uic.loadUiType("form.ui")
@@ -64,6 +64,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 pass
 
         self.particleList = calculate_odeint(self.particleList, self.time)
+        #self.particleList = calculate_verle(self.particleList)
 
         for i in range(len(self.particleList)):
             self.particleList[i].create_circle()
@@ -124,15 +125,22 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             return
 
         mass = self.particleMassSlider.value()
+        print(self.emitter.coordinates)
 
-        particle = Particle(self.emitter.coordinates,
+        particle = Particle([
+                                self.emitter.coordinates[0],
+                                self.emitter.coordinates[1]
+                            ],
                             [
-                                xAxisSpeed * np.sign(self.emitter.vector[0]),
-                                yAxisSpeed * np.sign(self.emitter.vector[1])
+                                xAxisSpeed * self.emitter.vector[0],
+                                yAxisSpeed * self.emitter.vector[1]
                             ],
                             mass)
 
         self.particleList.append(particle)
+
+        for part in self.particleList:
+            print(part)
 
 
     def changeEmitter(self):
@@ -177,6 +185,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         # Creating new emitter
         self.emitter_vector = Arrow(self.emitter.coordinates[0], self.emitter.coordinates[1],
                                     self.emitter.vector[0] / 20, self.emitter.vector[1] / 20, width=0.09)
+
         # Adding it to the plot
         self.ax.add_artist(self.emitter_vector)
 
