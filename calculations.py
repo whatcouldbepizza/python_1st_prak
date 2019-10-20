@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-G = 6.67408 * math.pow(10, -11)
+G = 6.67408 * math.pow(10, -5)
 
 
 def get_acceleration(particleList, index):
@@ -34,22 +34,25 @@ def calculate_odeint(particleList, time):
     """
     Calculation based on odeint
     """
+    new_particles = particleList.copy()
+    to_delete = []
+
     if len(particleList) == 1:
-        particleList[0].living_time -= 1
+        new_particles[0].living_time -= 1
 
-        if particleList[0].living_time == 0:
-            del particleList[0]
-            return particleList
+        if new_particles[0].living_time == 0:
+            del new_particles[0]
+            return new_particles
 
-        particleList[0].coordinates[0] += particleList[0].speed[0]
-        particleList[0].coordinates[1] += particleList[0].speed[1]
-        return particleList
+        new_particles[0].coordinates[0] += particleList[0].speed[0]
+        new_particles[0].coordinates[1] += particleList[0].speed[1]
+        return new_particles
 
     for i in range(len(particleList)):
-        particleList[i].living_time -= 1
+        new_particles[i].living_time -= 1
 
-        if particleList[i].living_time == 0:
-            del particleList[i]
+        if new_particles[i].living_time == 0:
+            to_delete.append(i)
             continue
 
         res = odeint(func=pend,
@@ -62,29 +65,50 @@ def calculate_odeint(particleList, time):
                      t=np.linspace(time, time + 1, 2),
                      args=(particleList, i))
 
-        particleList[i].coordinates[0], particleList[i].coordinates[1], particleList[i].speed[0], particleList[i].speed[1] = res[-1]
+        new_particles[i].coordinates[0], new_particles[i].coordinates[1], new_particles[i].speed[0], new_particles[i].speed[1] = res[-1]
 
-    return particleList
+    for i in to_delete:
+        del new_particles[i]
+
+    return new_particles
 
 
 def calculate_verle(particleList):
     """
     Calculations based in Verle method
     """
+    new_particles = particleList.copy()
+    to_delete = []
+
     if len(particleList) == 1:
-        particleList[0].coordinates[0] += particleList[0].speed[0]
-        particleList[0].coordinates[1] += particleList[0].speed[1]
-        return particleList
+        new_particles[0].living_time -= 1
+
+        if new_particles[0].living_time == 0:
+            del new_particles[0]
+            return new_particles
+
+        new_particles[0].coordinates[0] += particleList[0].speed[0]
+        new_particles[0].coordinates[1] += particleList[0].speed[1]
+        return new_particles
 
     for i in range(len(particleList)):
+        new_particles[i].living_time -= 1
+
+        if new_particles[i].living_time == 0:
+            to_delete.append(i)
+            continue
+
         old_acceleration = get_acceleration(particleList, i)
 
-        particleList[i].coordinates[0] += particleList[i].speed[0] + old_acceleration[0] / 2
-        particleList[i].coordinates[1] += particleList[i].speed[1] + old_acceleration[1] / 2
+        new_particles[i].coordinates[0] += particleList[i].speed[0] + old_acceleration[0] / 2
+        new_particles[i].coordinates[1] += particleList[i].speed[1] + old_acceleration[1] / 2
 
-        new_acceleration = get_acceleration(particleList, i)
+        new_acceleration = get_acceleration(new_particles, i)
 
-        particleList[i].speed[0] += (old_acceleration[0] + new_acceleration[0]) / 2
-        particleList[i].speed[1] += (old_acceleration[1] + new_acceleration[1]) / 2
+        new_particles[i].speed[0] += (old_acceleration[0] + new_acceleration[0]) / 2
+        new_particles[i].speed[1] += (old_acceleration[1] + new_acceleration[1]) / 2
 
-    return particleList
+    for i in to_delete:
+        del new_particles[i]
+
+    return new_particles
