@@ -16,7 +16,11 @@ class Particle:
         self.mass = mass
         self.color = color
         self.living_time = living_time
-        self.circle = Circle((coordinates[0], coordinates[1]), mass / 1000, color=self.color)
+        try:
+            self.circle = Circle((coordinates[0], coordinates[1]), mass / 1000, color=self.color)
+        except Exception:
+            print("Failed to create circle with entered color, creating red instead...")
+            self.circle = Circle((coordinates[0], coordinates[1]), mass / 1000, color="red")
 
     def create_circle(self):
         self.circle = Circle((self.coordinates[0], self.coordinates[1]), self.mass / 1000, color=self.color)

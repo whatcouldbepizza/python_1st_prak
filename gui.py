@@ -30,8 +30,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         self.emitter = Emitter()
 
-        #manager = Manager()
-        #self.particleList = manager.list()
         self.particleList = []
 
         self.figure = plt.figure()
@@ -57,14 +55,19 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         """
         Function to draw all particles
         """
+        if self.pauseRadioButton.isChecked():
+            return
+
         for i in range(len(self.particleList)):
             try:
                 self.particleList[i].circle.remove()
             except Exception:
                 pass
 
-        self.particleList = calculate_odeint(self.particleList, self.time)
-        #self.particleList = calculate_verle(self.particleList)
+        if self.methodCheckBox.isChecked():
+            self.particleList = calculate_verle(self.particleList)
+        else:
+            self.particleList = calculate_odeint(self.particleList, self.time)
 
         for i in range(len(self.particleList)):
             self.particleList[i].create_circle()
@@ -87,6 +90,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         vertical_layout1.addWidget(self.particleXAxisSpeedLineEdit)
         vertical_layout1.addWidget(self.particleYAxisSpeedLineEdit)
+        vertical_layout1.addWidget(self.particleColorLineEdit)
         vertical_layout1.addWidget(self.massLabel)
         vertical_layout1.addWidget(self.particleMassSlider)
         vertical_layout1.addWidget(self.generateParticleButton)
@@ -98,14 +102,24 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         vertical_layout2.addWidget(self.emitterXVectorLineEdit)
         vertical_layout2.addWidget(self.emitterYVectorLineEdit)
         vertical_layout2.addWidget(self.emitterChangeButton)
+        vertical_layout2.addWidget(self.pauseRadioButton)
 
-        horizontal_layout = QHBoxLayout()
+        horizontal_layout1 = QHBoxLayout()
 
-        horizontal_layout.addLayout(vertical_layout1)
-        horizontal_layout.addLayout(vertical_layout2)
-        horizontal_layout.addWidget(self.canvas)
+        horizontal_layout1.addLayout(vertical_layout1)
+        horizontal_layout1.addLayout(vertical_layout2)
 
-        self.centralwidget.setLayout(horizontal_layout)
+        vertical_layout3 = QVBoxLayout()
+
+        vertical_layout3.addLayout(horizontal_layout1)
+        vertical_layout3.addWidget(self.methodCheckBox)
+
+        horizontal_layout2 = QHBoxLayout()
+
+        horizontal_layout2.addLayout(vertical_layout3)
+        horizontal_layout2.addWidget(self.canvas)
+
+        self.centralwidget.setLayout(horizontal_layout2)
 
 
     def generateParticle(self):
@@ -124,8 +138,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             print("generateParticle(): y axis speed is in wrong format!")
             return
 
+        color = self.particleColorLineEdit.text()
+
         mass = self.particleMassSlider.value()
-        print(self.emitter.coordinates)
 
         particle = Particle([
                                 self.emitter.coordinates[0],
@@ -135,12 +150,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                 xAxisSpeed * self.emitter.vector[0],
                                 yAxisSpeed * self.emitter.vector[1]
                             ],
-                            mass)
+                            mass,
+                            color)
 
         self.particleList.append(particle)
-
-        for part in self.particleList:
-            print(part)
 
 
     def changeEmitter(self):
