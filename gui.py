@@ -11,6 +11,8 @@ import numpy as np
 from classes import Particle, Emitter
 from calculations import calculate_odeint, calculate_verle
 
+import json
+
 
 Ui_MainWindow, QMainWindow = uic.loadUiType("form.ui")
 
@@ -46,7 +48,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         self.figure.canvas.mpl_connect('button_press_event', self.changeEmitter)
 
-        self.animation = FuncAnimation(self.figure, self.draw_particles, interval=1000)
+        self.particleList = self.initialize_solar_system()
+
+        self.animation = FuncAnimation(self.figure, self.draw_particles, interval=500)
 
         self.time = 0
 
@@ -69,8 +73,20 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.particleList = calculate_odeint(self.particleList, self.time)
 
+        max_x = max([ elem.coordinates[0] for elem in self.particleList ])
+        max_y = max([ elem.coordinates[1] for elem in self.particleList ])
+        max_m = max([ elem.mass for elem in self.particleList ])
+
         for i in range(len(self.particleList)):
-            self.particleList[i].create_circle()
+
+            self.particleList[i].create_circle(coordinates=
+                                               [
+                                                   self.particleList[i].coordinates[0] / max_x,
+                                                   self.particleList[i].coordinates[1] / (max_x / 5)
+                                               ],
+                                               #size=self.particleList[i].mass / (max_m * 10)
+                                               size=0.01)
+
             self.ax.add_artist(self.particleList[i].circle)
 
         self.time += 1
@@ -205,3 +221,24 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         # Redraw plot
         self.figure.canvas.draw_idle()
 
+
+    def initialize_solar_system(self, data_file="solar_system.json"):
+        """
+        Function that prepares solar system example
+        """
+        with open(data_file, "r") as descr:
+            text_content = descr.read()
+
+        json_content = json.loads(text_content)
+
+        for val in json_content["particles"].values():
+
+            particle = Particle(coordinates=[val["x"], val["y"]],
+                                speed=[val["u"], val["v"]],
+                                mass=val["m"],
+                                color="red",
+                                living_time=val["lifetime"])
+
+            self.particleList.append(particle)
+
+        return self.particleList

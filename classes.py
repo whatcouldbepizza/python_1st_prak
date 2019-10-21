@@ -7,7 +7,7 @@ class Particle:
     """
     Class describing a single particle
     """
-    def __init__(self, coordinates=[0, 0], speed=[0.5, 0.5], mass=1, color="red", living_time=40):
+    def __init__(self, coordinates=[0, 0], speed=[0.5, 0.5], mass=1, size=1, color="red", living_time=40):
         """
         Main constructor
         """
@@ -17,22 +17,18 @@ class Particle:
         self.color = color
         self.living_time = living_time
         try:
-            self.circle = Circle((coordinates[0], coordinates[1]), mass / 1000, color=self.color)
+            self.circle = Circle((coordinates[0], coordinates[1]), self.mass, color=self.color)
         except Exception:
             print("Failed to create circle with entered color, creating red instead...")
-            self.circle = Circle((coordinates[0], coordinates[1]), mass / 1000, color="red")
+            self.circle = Circle((coordinates[0], coordinates[1]), self.mass, color="red")
 
-    def create_circle(self):
-        self.circle = Circle((self.coordinates[0], self.coordinates[1]), self.mass / 1000, color=self.color)
-
-    def mass_for_calculation(self):
-        return math.pow(10, self.mass)
+    def create_circle(self, coordinates, size, color="red"):
+        self.circle = Circle((coordinates[0], coordinates[1]), size, color=color)
 
     def __str__(self):
         return "Particle information:\n    coordinates: [{},{}]".format(self.coordinates[0], self.coordinates[1]) + \
                "\n    speed: [{},{}]".format(self.speed[0], self.speed[1]) + \
                "\n    mass: {}".format(self.mass) + \
-               "\n    calculation mass: {}".format(self.mass_for_calculation()) + \
                "\n    color: {}".format(self.color) + \
                "\n    living_time: {}".format(self.living_time) + \
                "\n    cirlcle: {}".format(self.circle)

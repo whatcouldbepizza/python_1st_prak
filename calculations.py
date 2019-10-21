@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-G = 6.67408 * math.pow(10, -6)
+G = 6.67408 * math.pow(10, -11)
 
 
 def get_acceleration(particleList, index):
@@ -37,6 +37,7 @@ def calculate_odeint(particleList, time):
     new_particles = particleList.copy()
     to_delete = []
 
+
     if len(particleList) == 1:
         new_particles[0].living_time -= 1
 
@@ -62,7 +63,7 @@ def calculate_odeint(particleList, time):
                         particleList[i].speed[0],
                         particleList[i].speed[1]
                      ],
-                     t=np.linspace(time, time + 1, 2),
+                     t=np.linspace(0, 1000000, 2),
                      args=(particleList, i))
 
         new_particles[i].coordinates[0], new_particles[i].coordinates[1], new_particles[i].speed[0], new_particles[i].speed[1] = res[-1]
@@ -113,5 +114,8 @@ def calculate_verle(particleList):
         del new_particles[to_delete[0]]
         to_delete = [ elem - 1 if elem > to_delete[0] else elem for elem in to_delete[1:] ]
 
+    for part in particleList:
+        print(part)
+    print("-----------------")
 
     return new_particles
