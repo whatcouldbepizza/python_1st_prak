@@ -37,7 +37,6 @@ def calculate_odeint(particleList, time):
     new_particles = particleList.copy()
     to_delete = []
 
-
     if len(particleList) == 1:
         new_particles[0].living_time -= 1
 
@@ -79,6 +78,8 @@ def calculate_verle(particleList):
     """
     Calculations based in Verle method
     """
+    delta_t = 1000000
+
     new_particles = particleList.copy()
     to_delete = []
 
@@ -102,20 +103,16 @@ def calculate_verle(particleList):
 
         old_acceleration = get_acceleration(particleList, i)
 
-        new_particles[i].coordinates[0] += particleList[i].speed[0] + old_acceleration[0] / 2
-        new_particles[i].coordinates[1] += particleList[i].speed[1] + old_acceleration[1] / 2
+        new_particles[i].coordinates[0] += (particleList[i].speed[0] + old_acceleration[0] / 2) * delta_t
+        new_particles[i].coordinates[1] += (particleList[i].speed[1] + old_acceleration[1] / 2) * delta_t
 
         new_acceleration = get_acceleration(new_particles, i)
 
-        new_particles[i].speed[0] += (old_acceleration[0] + new_acceleration[0]) / 2
-        new_particles[i].speed[1] += (old_acceleration[1] + new_acceleration[1]) / 2
+        new_particles[i].speed[0] += (new_acceleration[0] + old_acceleration[0]) / 2 * delta_t
+        new_particles[i].speed[1] += (new_acceleration[1] + old_acceleration[1]) / 2 * delta_t
 
     while len(to_delete) > 0:
         del new_particles[to_delete[0]]
         to_delete = [ elem - 1 if elem > to_delete[0] else elem for elem in to_delete[1:] ]
-
-    for part in particleList:
-        print(part)
-    print("-----------------")
 
     return new_particles
