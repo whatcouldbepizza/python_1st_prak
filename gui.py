@@ -12,6 +12,7 @@ from classes import Particle, Emitter
 from calculations import calculate_odeint, calculate_verle
 
 import json
+import datetime
 
 
 Ui_MainWindow, QMainWindow = uic.loadUiType("form.ui")
@@ -68,31 +69,37 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
+        start_time = datetime.datetime.now()
+
         if self.methodCheckBox.isChecked():
             self.particleList = calculate_verle(self.particleList)
+            print("Verle iteration time: {}".format(datetime.datetime.now() - start_time))
         else:
             self.particleList = calculate_odeint(self.particleList, self.time)
-
-        #self.particleList = calculate_verle(self.particleList)
-        #self.particleList = calculate_odeint(self.particleList, self.time)
+            print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
 
         if len(self.particleList) != 0:
             max_x = max([ elem.coordinates[0] for elem in self.particleList ])
             max_y = max([ elem.coordinates[1] for elem in self.particleList ])
             max_m = max([ elem.mass for elem in self.particleList ])
 
-            color = "red" if self.time % 2 == 0 else "green"
+            sorted_masses = sorted([ elem.mass for elem in self.particleList ])
+            masses_map = dict()
+            sizes = np.linspace(0.01, 0.05, len(sorted_masses))
+
+            for i, elem in enumerate(sorted_masses):
+                masses_map[elem] = sizes[i]
 
             for i in range(len(self.particleList)):
 
                 self.particleList[i].create_circle(coordinates=
                                                    [
                                                        self.particleList[i].coordinates[0] / max_x,
-                                                       self.particleList[i].coordinates[1] / (max_x / 5)
+                                                       self.particleList[i].coordinates[1] / (max_x / 10)
                                                    ],
                                                    #size=self.particleList[i].mass / (max_m * 10)
-                                                   size=0.01,
-                                                   color=color)
+                                                   size=masses_map[self.particleList[i].mass],
+                                                   color=self.particleList[i].color)
 
                 self.ax.add_artist(self.particleList[i].circle)
 
@@ -243,7 +250,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             particle = Particle(coordinates=[val["x"], val["y"]],
                                 speed=[val["u"], val["v"]],
                                 mass=val["m"],
-                                color="red",
+                                color=val["color"],
                                 living_time=val["lifetime"])
 
             self.particleList.append(particle)

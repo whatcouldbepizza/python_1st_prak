@@ -38,7 +38,7 @@ class Emitter:
     """
     Class describing emitter
     """
-    def __init__(self, coordinates=[0.5, 0.5], emitting_vector=[1, 1]):
+    def __init__(self, coordinates=[0.0, 0.0], emitting_vector=[1, 1]):
         """
         Main constructor
         """
