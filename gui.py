@@ -49,7 +49,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         self.figure.canvas.mpl_connect('button_press_event', self.changeEmitter)
 
-        self.particleList = self.initialize_solar_system()
+        self.solar_mode = False
+
+        #self.particleList = self.initialize_solar_system()
 
         self.animation = FuncAnimation(self.figure, self.draw_particles, interval=500)
 
@@ -71,14 +73,30 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         start_time = datetime.datetime.now()
 
-        if self.methodCheckBox.isChecked():
-            self.particleList = calculate_verle(self.particleList)
-            print("Verle iteration time: {}".format(datetime.datetime.now() - start_time))
-        else:
-            self.particleList = calculate_odeint(self.particleList, self.time)
-            print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
+        delta_t = 1000000 if self.solar_mode else 1
 
-        if len(self.particleList) != 0:
+        if self.methodCheckBox.isChecked():
+            self.particleList = calculate_verle(self.particleList, delta_t)
+            #print("Verle iteration time: {}".format(datetime.datetime.now() - start_time))
+        else:
+            self.particleList = calculate_odeint(self.particleList, delta_t)
+            #print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
+
+        if not self.solar_mode:
+            for i in range(len(self.particleList)):
+                print(self.particleList[i].color)
+                self.particleList[i].create_circle(coordinates=
+                                                   [
+                                                       self.particleList[i].coordinates[0],
+                                                       self.particleList[i].coordinates[1]
+                                                   ],
+                                                   size=self.particleList[i].mass / 1000,
+                                                   color=self.particleList[i].color)
+
+                self.ax.add_artist(self.particleList[i].circle)
+                print(self.particleList[i].circle)
+
+        elif len(self.particleList) != 0:
             max_x = max([ elem.coordinates[0] for elem in self.particleList ])
             max_y = max([ elem.coordinates[1] for elem in self.particleList ])
             max_m = max([ elem.mass for elem in self.particleList ])
@@ -100,6 +118,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                                    #size=self.particleList[i].mass / (max_m * 10)
                                                    size=masses_map[self.particleList[i].mass],
                                                    color=self.particleList[i].color)
+
+                print(self.particleList[i].circle)
 
                 self.ax.add_artist(self.particleList[i].circle)
 
@@ -169,6 +189,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             return
 
         color = self.particleColorLineEdit.text()
+        print(color)
 
         mass = self.particleMassSlider.value()
 
@@ -184,6 +205,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                             color)
 
         self.particleList.append(particle)
+
+        for part in self.particleList:
+            print(part)
 
 
     def changeEmitter(self):
@@ -254,5 +278,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                 living_time=val["lifetime"])
 
             self.particleList.append(particle)
+
+        self.solar_mode = True
 
         return self.particleList

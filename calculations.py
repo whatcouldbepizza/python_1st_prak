@@ -30,7 +30,7 @@ def pend(prev, t, particleList, index):
     return [u, v, summ_x, summ_y]
 
 
-def calculate_odeint(particleList, time):
+def calculate_odeint(particleList, delta_t):
     """
     Calculation based on odeint
     """
@@ -62,7 +62,7 @@ def calculate_odeint(particleList, time):
                         particleList[i].speed[0],
                         particleList[i].speed[1]
                      ],
-                     t=np.linspace(0, 1000000, 2),
+                     t=np.linspace(0, delta_t, 2),
                      args=(particleList, i))
 
         new_particles[i].coordinates[0], new_particles[i].coordinates[1], new_particles[i].speed[0], new_particles[i].speed[1] = res[-1]
@@ -74,11 +74,10 @@ def calculate_odeint(particleList, time):
     return new_particles
 
 
-def calculate_verle(particleList):
+def calculate_verle(particleList, delta_t):
     """
     Calculations based in Verle method
     """
-    delta_t = 1000000
 
     new_particles = particleList.copy()
     to_delete = []

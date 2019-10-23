@@ -7,7 +7,7 @@ class Particle:
     """
     Class describing a single particle
     """
-    def __init__(self, coordinates=[0, 0], speed=[0.5, 0.5], mass=1, size=1, color="red", living_time=40):
+    def __init__(self, coordinates=[0, 0], speed=[0.5, 0.5], mass=1, color="red", living_time=40):
         """
         Main constructor
         """
@@ -23,6 +23,7 @@ class Particle:
             self.circle = Circle((coordinates[0], coordinates[1]), self.mass, color="red")
 
     def create_circle(self, coordinates, size, color="red"):
+
         self.circle = Circle((coordinates[0], coordinates[1]), size, color=color)
 
     def __str__(self):
