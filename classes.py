@@ -7,7 +7,7 @@ class Particle:
     """
     Class describing a single particle
     """
-    def __init__(self, coordinates=[0, 0], speed=[0.5, 0.5], mass=1, color="red", living_time=40):
+    def __init__(self, coordinates=[0, 0], speed=[0.0, 0.0], mass=1, color="red", living_time=100000):
         """
         Main constructor
         """
@@ -39,7 +39,7 @@ class Emitter:
     """
     Class describing emitter
     """
-    def __init__(self, coordinates=[0.0, 0.0], emitting_vector=[1, 1]):
+    def __init__(self, coordinates=[1.0, 1.0], emitting_vector=[1, 1]):
         """
         Main constructor
         """

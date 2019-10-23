@@ -53,9 +53,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         #self.particleList = self.initialize_solar_system()
 
-        self.animation = FuncAnimation(self.figure, self.draw_particles, interval=500)
+        self.animation = FuncAnimation(self.figure, self.draw_particles, interval=10)
 
-        self.time = 0
+        self.x_scale = None
+        self.y_scale = None
 
 
     def draw_particles(self, frame):
@@ -73,14 +74,14 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         start_time = datetime.datetime.now()
 
-        delta_t = 1000000 if self.solar_mode else 1
+        delta_t = 10000 if self.solar_mode else 1
 
         if self.methodCheckBox.isChecked():
             self.particleList = calculate_verle(self.particleList, delta_t)
-            #print("Verle iteration time: {}".format(datetime.datetime.now() - start_time))
+            print("Verle iteration time: {}".format(datetime.datetime.now() - start_time))
         else:
             self.particleList = calculate_odeint(self.particleList, delta_t)
-            #print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
+            print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
 
         if not self.solar_mode:
             for i in range(len(self.particleList)):
@@ -97,13 +98,17 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 print(self.particleList[i].circle)
 
         elif len(self.particleList) != 0:
-            max_x = max([ elem.coordinates[0] for elem in self.particleList ])
-            max_y = max([ elem.coordinates[1] for elem in self.particleList ])
+
+            if self.x_scale is None or self.y_scale is None:
+                self.x_scale = max([ elem.coordinates[0] for elem in self.particleList ])
+                self.y_scale = max([ elem.coordinates[1] for elem in self.particleList ])
+            #max_x = max([ elem.coordinates[0] for elem in self.particleList ])
+            #max_y = max([ elem.coordinates[1] for elem in self.particleList ])
             max_m = max([ elem.mass for elem in self.particleList ])
 
             sorted_masses = sorted([ elem.mass for elem in self.particleList ])
             masses_map = dict()
-            sizes = np.linspace(0.01, 0.05, len(sorted_masses))
+            sizes = np.linspace(0.01, 0.03, len(sorted_masses))
 
             for i, elem in enumerate(sorted_masses):
                 masses_map[elem] = sizes[i]
@@ -112,18 +117,16 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
                 self.particleList[i].create_circle(coordinates=
                                                    [
-                                                       self.particleList[i].coordinates[0] / max_x,
-                                                       self.particleList[i].coordinates[1] / (max_x / 10)
+                                                       #self.particleList[i].coordinates[0] / max_x,
+                                                       #self.particleList[i].coordinates[1] / (max_x / 100)
+                                                       self.particleList[i].coordinates[0] / (self.x_scale * 2.1) + 0.5,
+                                                       self.particleList[i].coordinates[1] / (self.x_scale * 2.1) + 0.5
                                                    ],
-                                                   #size=self.particleList[i].mass / (max_m * 10)
                                                    size=masses_map[self.particleList[i].mass],
                                                    color=self.particleList[i].color)
 
-                print(self.particleList[i].circle)
-
                 self.ax.add_artist(self.particleList[i].circle)
 
-        self.time += 1
         self.figure.canvas.draw_idle()
 
 
@@ -167,6 +170,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         horizontal_layout2 = QHBoxLayout()
 
         horizontal_layout2.addLayout(vertical_layout3)
+        self.canvas.setMinimumWidth(700)
+        self.canvas.setMinimumHeight(700)
         horizontal_layout2.addWidget(self.canvas)
 
         self.centralwidget.setLayout(horizontal_layout2)
