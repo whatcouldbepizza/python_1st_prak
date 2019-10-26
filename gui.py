@@ -45,7 +45,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.emitter_vector = Arrow(self.emitter.coordinates[0], self.emitter.coordinates[1],
                                     self.emitter.vector[0] / 20, self.emitter.vector[1] / 20, width=0.09)
 
-        self.ax.add_artist(self.emitter_vector)
+        #self.ax.add_artist(self.emitter_vector)
 
         self.figure.canvas.mpl_connect('button_press_event', self.changeEmitter)
 
@@ -56,7 +56,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.animation = FuncAnimation(self.figure, self.draw_particles, interval=10)
 
         self.x_scale = None
-        self.y_scale = None
 
 
     def draw_particles(self, frame):
@@ -78,32 +77,30 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         if self.methodCheckBox.isChecked():
             self.particleList = calculate_verle(self.particleList, delta_t)
-            print("Verle iteration time: {}".format(datetime.datetime.now() - start_time))
+            #print("Verle iteration time: {}".format(datetime.datetime.now() - start_time))
         else:
             self.particleList = calculate_odeint(self.particleList, delta_t)
-            print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
+            #print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
 
-        if not self.solar_mode:
-            for i in range(len(self.particleList)):
-                print(self.particleList[i].color)
-                self.particleList[i].create_circle(coordinates=
-                                                   [
-                                                       self.particleList[i].coordinates[0],
-                                                       self.particleList[i].coordinates[1]
-                                                   ],
-                                                   size=self.particleList[i].mass / 1000,
-                                                   color=self.particleList[i].color)
+        #if not self.solar_mode:
+        #    for i in range(len(self.particleList)):
+        #        print(self.particleList[i].color)
+        #        self.particleList[i].create_circle(coordinates=
+        #                                           [
+        #                                               self.particleList[i].coordinates[0],
+        #                                               self.particleList[i].coordinates[1]
+        #                                           ],
+        #                                           size=self.particleList[i].mass / 1000,
+        #                                           color=self.particleList[i].color)
 
-                self.ax.add_artist(self.particleList[i].circle)
-                print(self.particleList[i].circle)
+        #        self.ax.add_artist(self.particleList[i].circle)
+        #        print(self.particleList[i].circle)
 
-        elif len(self.particleList) != 0:
+        #elif len(self.particleList) != 0:
+        if len(self.particleList) != 0:
 
-            if self.x_scale is None or self.y_scale is None:
-                self.x_scale = max([ elem.coordinates[0] for elem in self.particleList ])
-                self.y_scale = max([ elem.coordinates[1] for elem in self.particleList ])
-            #max_x = max([ elem.coordinates[0] for elem in self.particleList ])
-            #max_y = max([ elem.coordinates[1] for elem in self.particleList ])
+            if self.x_scale is None:
+                self.x_scale = max([ elem.coordinates[0] for elem in self.particleList ] + [100])
             max_m = max([ elem.mass for elem in self.particleList ])
 
             sorted_masses = sorted([ elem.mass for elem in self.particleList ])
@@ -117,8 +114,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
                 self.particleList[i].create_circle(coordinates=
                                                    [
-                                                       #self.particleList[i].coordinates[0] / max_x,
-                                                       #self.particleList[i].coordinates[1] / (max_x / 100)
                                                        self.particleList[i].coordinates[0] / (self.x_scale * 2.1) + 0.5,
                                                        self.particleList[i].coordinates[1] / (self.x_scale * 2.1) + 0.5
                                                    ],
@@ -126,6 +121,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                                    color=self.particleList[i].color)
 
                 self.ax.add_artist(self.particleList[i].circle)
+
+                print(self.particleList[i])
+
+            print("------------------------------")
 
         self.figure.canvas.draw_idle()
 
@@ -145,7 +144,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         vertical_layout1.addWidget(self.particleYAxisSpeedLineEdit)
         vertical_layout1.addWidget(self.particleColorLineEdit)
         vertical_layout1.addWidget(self.massLabel)
-        vertical_layout1.addWidget(self.particleMassSlider)
+        #vertical_layout1.addWidget(self.particleMassSlider)
+        vertical_layout1.addWidget(self.particleMassLineEdit)
         vertical_layout1.addWidget(self.generateParticleButton)
 
         vertical_layout2 = QVBoxLayout()
@@ -196,7 +196,14 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         color = self.particleColorLineEdit.text()
         print(color)
 
-        mass = self.particleMassSlider.value()
+        #mass = self.particleMassSlider.value()
+
+        try:
+            mass_list = self.particleMassLineEdit.text().upper().split('E')
+            mass = float(mass_list[0]) * np.power(10, int(mass_list[1]))
+        except Exception as ex:
+            print("generateParticle(): failed to parse mass, error: " + str(ex))
+            return
 
         particle = Particle([
                                 self.emitter.coordinates[0],
@@ -210,9 +217,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                             color)
 
         self.particleList.append(particle)
-
-        for part in self.particleList:
-            print(part)
+        self.x_scale = None
 
 
     def changeEmitter(self):
@@ -259,7 +264,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                     self.emitter.vector[0] / 20, self.emitter.vector[1] / 20, width=0.09)
 
         # Adding it to the plot
-        self.ax.add_artist(self.emitter_vector)
+        #self.ax.add_artist(self.emitter_vector)
 
         # Redraw plot
         self.figure.canvas.draw_idle()
