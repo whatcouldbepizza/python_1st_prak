@@ -7,9 +7,10 @@ from matplotlib.patches import Arrow
 from matplotlib.animation import FuncAnimation
 
 import numpy as np
+from math import pow
 
 from classes import Particle, Emitter
-from calculations import calculate_odeint, calculate_verle
+from calculations import calculate_odeint, calculate_verle, supercopy
 
 import json
 import datetime
@@ -51,11 +52,15 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         self.solar_mode = False
 
-        #self.particleList = self.initialize_solar_system()
+        self.particleList = self.initialize_solar_system()
+        self.particleListV = supercopy(self.particleList)
 
         self.animation = FuncAnimation(self.figure, self.draw_particles, interval=10)
 
         self.x_scale = None
+
+        self.inaccuracy_iter = [[], []]
+        self.i = 0
 
 
     def draw_particles(self, frame):
@@ -65,6 +70,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         if self.pauseRadioButton.isChecked():
             return
 
+        self.i += 1
+
         for i in range(len(self.particleList)):
             try:
                 self.particleList[i].circle.remove()
@@ -73,30 +80,58 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         start_time = datetime.datetime.now()
 
-        delta_t = 10000 if self.solar_mode else 1
+        delta_t = 0.1 if self.solar_mode else 1
 
-        if self.methodCheckBox.isChecked():
-            self.particleList = calculate_verle(self.particleList, delta_t)
+        odeint_list = supercopy(self.particleList)
+        verle_list = supercopy(self.particleListV)
+
+        #if self.methodCheckBox.isChecked():
+            #self.particleList = calculate_verle(self.particleList, delta_t)
+        #    verle_list = calculate_verle(verle_list, delta_t)
             #print("Verle iteration time: {}".format(datetime.datetime.now() - start_time))
-        else:
-            self.particleList = calculate_odeint(self.particleList, delta_t)
+        #else:
+            #self.particleList = calculate_odeint(self.particleList, delta_t)
+        #    odeint_list = calculate_odeint(odeint_list, delta_t)
             #print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
 
-        #if not self.solar_mode:
-        #    for i in range(len(self.particleList)):
-        #        print(self.particleList[i].color)
-        #        self.particleList[i].create_circle(coordinates=
-        #                                           [
-        #                                               self.particleList[i].coordinates[0],
-        #                                               self.particleList[i].coordinates[1]
-        #                                           ],
-        #                                           size=self.particleList[i].mass / 1000,
-        #                                           color=self.particleList[i].color)
+        verle_list = calculate_verle(verle_list, delta_t)
+        odeint_list = calculate_odeint(odeint_list, delta_t)
 
-        #        self.ax.add_artist(self.particleList[i].circle)
-        #        print(self.particleList[i].circle)
+        #self.print_particle_list(odeint_list)
+        #self.print_particle_list(verle_list)
 
-        #elif len(self.particleList) != 0:
+        self.particleList = supercopy(odeint_list)
+        self.particleListV = supercopy(verle_list)
+
+        #inaccuracy_x = 0
+        #inaccuracy_y = 0
+
+        #for i in range(len(odeint_list)):
+        #    inaccuracy_x += pow(odeint_list[i].coordinates[0] - verle_list[i].coordinates[0], 2)
+        #    inaccuracy_y += pow(odeint_list[i].coordinates[1] - verle_list[i].coordinates[1], 2)
+
+        #inacc = np.sqrt(inaccuracy_x + inaccuracy_y)
+
+        #print(inacc)
+        #try:
+        #    print(inacc - self.inaccuracy_iter[1][-1])
+        #except Exception:
+        #    pass
+
+        metric = .0
+
+        for p_1, p_2 in zip(odeint_list, verle_list):
+            dist = np.array(p_1.coordinates) - np.array(p_2.coordinates)
+            metric += np.linalg.norm(dist)
+
+        self.inaccuracy_iter[0].append(self.i)
+        self.inaccuracy_iter[1].append(metric)
+        print(metric)
+        #try:
+        #    self.inaccuracy_iter[1].append(inacc - self.inaccuracy_iter[1][-1])
+        #except Exception:
+        #    self.inaccuracy_iter[1].append(inacc)
+
         if len(self.particleList) != 0:
 
             if self.x_scale is None:
@@ -122,10 +157,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
                 self.ax.add_artist(self.particleList[i].circle)
 
-                print(self.particleList[i])
-
-            print("------------------------------")
-
         self.figure.canvas.draw_idle()
 
 
@@ -135,6 +166,12 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         """
         self.generateParticleButton.clicked.connect(self.generateParticle)
         self.emitterChangeButton.clicked.connect(self.changeEmitter)
+        self.pauseRadioButton.clicked.connect(self.draw_inacc)
+
+
+    def draw_inacc(self):
+        plt.plot(self.inaccuracy_iter[0], self.inaccuracy_iter[1])
+        #plt.show()
 
 
     def setLayouts(self):
@@ -194,13 +231,12 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             return
 
         color = self.particleColorLineEdit.text()
-        print(color)
 
         #mass = self.particleMassSlider.value()
 
         try:
             mass_list = self.particleMassLineEdit.text().upper().split('E')
-            mass = float(mass_list[0]) * np.power(10, int(mass_list[1]))
+            mass = float(mass_list[0]) * pow(10, int(mass_list[1]))
         except Exception as ex:
             print("generateParticle(): failed to parse mass, error: " + str(ex))
             return
@@ -292,3 +328,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.solar_mode = True
 
         return self.particleList
+
+
+    def print_particle_list(self, lst):
+        for elem in lst:
+            print(elem.coordinates)
+
+        print("-----")
