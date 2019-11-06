@@ -46,8 +46,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.emitter_vector = Arrow(self.emitter.coordinates[0], self.emitter.coordinates[1],
                                     self.emitter.vector[0] / 20, self.emitter.vector[1] / 20, width=0.09)
 
-        #self.ax.add_artist(self.emitter_vector)
-
         self.figure.canvas.mpl_connect('button_press_event', self.changeEmitter)
 
         self.solar_mode = False
@@ -80,7 +78,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         start_time = datetime.datetime.now()
 
-        delta_t = 0.1 if self.solar_mode else 1
+        delta_t = 10 if self.solar_mode else 1
 
         odeint_list = supercopy(self.particleList)
         verle_list = supercopy(self.particleListV)
@@ -97,26 +95,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         verle_list = calculate_verle(verle_list, delta_t)
         odeint_list = calculate_odeint(odeint_list, delta_t)
 
-        #self.print_particle_list(odeint_list)
-        #self.print_particle_list(verle_list)
-
         self.particleList = supercopy(odeint_list)
         self.particleListV = supercopy(verle_list)
-
-        #inaccuracy_x = 0
-        #inaccuracy_y = 0
-
-        #for i in range(len(odeint_list)):
-        #    inaccuracy_x += pow(odeint_list[i].coordinates[0] - verle_list[i].coordinates[0], 2)
-        #    inaccuracy_y += pow(odeint_list[i].coordinates[1] - verle_list[i].coordinates[1], 2)
-
-        #inacc = np.sqrt(inaccuracy_x + inaccuracy_y)
-
-        #print(inacc)
-        #try:
-        #    print(inacc - self.inaccuracy_iter[1][-1])
-        #except Exception:
-        #    pass
 
         metric = .0
 
@@ -126,11 +106,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         self.inaccuracy_iter[0].append(self.i)
         self.inaccuracy_iter[1].append(metric)
-        print(metric)
-        #try:
-        #    self.inaccuracy_iter[1].append(inacc - self.inaccuracy_iter[1][-1])
-        #except Exception:
-        #    self.inaccuracy_iter[1].append(inacc)
 
         if len(self.particleList) != 0:
 
@@ -171,7 +146,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
     def draw_inacc(self):
         plt.plot(self.inaccuracy_iter[0], self.inaccuracy_iter[1])
-        #plt.show()
 
 
     def setLayouts(self):
@@ -181,7 +155,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         vertical_layout1.addWidget(self.particleYAxisSpeedLineEdit)
         vertical_layout1.addWidget(self.particleColorLineEdit)
         vertical_layout1.addWidget(self.massLabel)
-        #vertical_layout1.addWidget(self.particleMassSlider)
         vertical_layout1.addWidget(self.particleMassLineEdit)
         vertical_layout1.addWidget(self.generateParticleButton)
 
@@ -298,9 +271,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         # Creating new emitter
         self.emitter_vector = Arrow(self.emitter.coordinates[0], self.emitter.coordinates[1],
                                     self.emitter.vector[0] / 20, self.emitter.vector[1] / 20, width=0.09)
-
-        # Adding it to the plot
-        #self.ax.add_artist(self.emitter_vector)
 
         # Redraw plot
         self.figure.canvas.draw_idle()

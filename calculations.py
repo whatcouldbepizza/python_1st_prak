@@ -5,7 +5,6 @@ from classes import Particle
 import copy
 
 
-#G = 6.67408 * math.pow(10, -11)
 G = 6.6743015 * (10 ** -11)
 
 
@@ -97,13 +96,6 @@ def calculate_odeint(particleList, delta_t):
                      args=(new_particles, i))
 
         new_particles[i].coordinates[0], new_particles[i].coordinates[1], new_particles[i].speed[0], new_particles[i].speed[1] = res[-1]
-        #print(res[-1])
-
-    tmp = .0
-    for p_1, p_2 in zip(new_particles, particleList):
-        dist = np.array(p_1.coordinates) - np.array(p_2.coordinates)
-        tmp += np.linalg.norm(dist)
-    print(tmp)
 
     while len(to_delete) > 0:
         del new_particles[to_delete[0]]
@@ -117,7 +109,6 @@ def calculate_verle(particleList, delta_t):
     Calculations based in Verle method
     """
 
-    #new_particles = particleList.copy()
     new_particles = supercopy(particleList)
     to_delete = []
 
@@ -148,12 +139,6 @@ def calculate_verle(particleList, delta_t):
 
         new_particles[i].speed[0] += (new_acceleration[0] + old_acceleration[0]) / 2 * delta_t
         new_particles[i].speed[1] += (new_acceleration[1] + old_acceleration[1]) / 2 * delta_t
-
-    tmp = .0
-    for p_1, p_2 in zip(new_particles, particleList):
-        dist = np.array(p_1.coordinates) - np.array(p_2.coordinates)
-        tmp += np.linalg.norm(dist)
-    print(tmp)
 
     while len(to_delete) > 0:
         del new_particles[to_delete[0]]
