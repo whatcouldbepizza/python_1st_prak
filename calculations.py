@@ -145,3 +145,87 @@ def calculate_verle(particleList, delta_t):
         to_delete = [ elem - 1 if elem > to_delete[0] else elem for elem in to_delete[1:] ]
 
     return new_particles
+
+
+def overall_pend(prev, t, p_masses):
+    acceleration_list = []
+
+    for i in range(len(prev) // 4):
+        partial_acceleration = np.array([0.0, 0.0])
+
+        for j in range(len(prev) // 4):
+            if i == j:
+                continue
+
+            distance = np.array([
+                                    prev[i * 4] - prev[j * 4],
+                                    prev[i * 4 + 1] - prev[j * 4 + 1]
+                                ])
+
+            norm = np.linalg.norm(distance)
+
+            if norm <= p_masses[i] * 5 + p_masses[j] * 5:
+                continue
+
+            partial_acceleration += G * p_masses[j] * distance / norm
+
+        acceleration_list.append([partial_acceleration[0], partial_acceleration[1]])
+
+    result = []
+
+    for i in range(len(prev) // 4):
+        result.extend([
+                          prev[i * 4 + 2],
+                          prev[i * 4 + 3],
+                          acceleration_list[i][0],
+                          acceleration_list[i][1]
+                      ])
+
+    return result
+
+
+def overall_odeint(particleList, tGrid):
+    particles = []
+
+    y0 = []
+
+    for _, p in enumerate(particleList):
+        y0.extend([
+                      p.coordinates[0],
+                      p.coordinates[1],
+                      p.speed[0],
+                      p.speed[1]
+                  ])
+
+    result = odeint(func=overall_pend, y0=y0, t=tGrid, args=([p.mass for _, p in enumerate(particleList)],))
+
+    for i in range(len(result[-1]) // 4):
+        particles.append([
+                             result[-1][i * 4],
+                             result[-1][i * 4 + 1],
+                             result[-1][i * 4 + 2],
+                             result[-1][i * 4 + 3],
+                         ])
+
+    return particles
+
+
+def overall_verle(particleList, tGrid):
+    particles = [[
+                     p.coordinates[0],
+                     p.coordinates[1],
+                     p.speed[0],
+                     p.speed[1]] for p in particleList
+                 ]
+
+    delta_t = tGrid[1] - tGrid[0]
+
+    for _, p in enumerate(particleList):
+        particles.append([
+                             p.coordinates[0],
+                             p.coordinates[1],
+                             p.speed[0],
+                             p.speed[1]
+                         ])
+
+

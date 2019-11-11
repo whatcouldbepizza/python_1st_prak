@@ -76,8 +76,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
-        start_time = datetime.datetime.now()
-
         delta_t = 10 if self.solar_mode else 1
 
         odeint_list = supercopy(self.particleList)
@@ -92,8 +90,13 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         #    odeint_list = calculate_odeint(odeint_list, delta_t)
             #print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
 
+        start_time = datetime.datetime.now()
         verle_list = calculate_verle(verle_list, delta_t)
+        print("Verle iteration: {}".format(datetime.datetime.now() - start_time))
+
+        start_time = datetime.datetime.now()
         odeint_list = calculate_odeint(odeint_list, delta_t)
+        print("Odeint iteration: {}".format(datetime.datetime.now() - start_time))
 
         self.particleList = supercopy(odeint_list)
         self.particleListV = supercopy(verle_list)
@@ -280,6 +283,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         """
         Function that prepares solar system example
         """
+        self.particleList = []
+
         with open(data_file, "r") as descr:
             text_content = descr.read()
 
@@ -300,7 +305,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         return self.particleList
 
 
-    def print_particle_list(self, lst):
+    def print_particle_list(self, lst=None):
         for elem in lst:
             print(elem.coordinates)
 
