@@ -15,9 +15,8 @@ def compare(particleList):
     """
     Compare odeint and Verle methods
     """
-    T = 10
-    delta_t = 1
-    #tGrid = np.linspace(0, T, delta_t)
+    T = 10000000000
+    delta_t = 100000
     tGrid = np.arange(0, T, delta_t)
 
     result_list = []
@@ -49,3 +48,9 @@ def compare(particleList):
     start_time = datetime.datetime.now()
     odeint_result = overall_odeint(odeint_list, tGrid)
     print("Odeint time: " + str(datetime.datetime.now() - start_time))
+
+    start_time = datetime.datetime.now()
+    verle_result = overall_verle(verle_list, tGrid)
+    print("Verle time: " + str(datetime.datetime.now() - start_time))
+
+    #print("odeint: " + str(odeint_result) + "\n\n\nverle: " + str(verle_result))

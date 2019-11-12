@@ -210,22 +210,70 @@ def overall_odeint(particleList, tGrid):
     return particles
 
 
+def get_acceleration_verle(particleList, p_masses, index):
+    """
+    Getting acceleration for one point dictated by other points
+    """
+    res = np.array([0.0, 0.0])
+
+    for i in range(len(particleList)):
+        if i == index:
+            continue
+
+        distance = np.array([particleList[i][0] - particleList[index][0],
+                             particleList[i][1] - particleList[index][1]])
+
+        if np.linalg.norm(distance) <= p_masses[index] * 5 + p_masses[i] * 5:
+            continue
+
+        res += G * p_masses[i] * distance / (np.linalg.norm(distance) ** 3)
+
+    return res
+
+
 def overall_verle(particleList, tGrid):
-    particles = [[
-                     p.coordinates[0],
-                     p.coordinates[1],
-                     p.speed[0],
-                     p.speed[1]] for p in particleList
-                 ]
+    particles = [[[0, 0, 0, 0] for _ in particleList] for _ in tGrid]
+    p_masses = [p.mass for p in particleList]
 
     delta_t = tGrid[1] - tGrid[0]
 
-    for _, p in enumerate(particleList):
-        particles.append([
-                             p.coordinates[0],
-                             p.coordinates[1],
-                             p.speed[0],
-                             p.speed[1]
-                         ])
+    for p_i, p in enumerate(particleList):
+        particles[0][p_i][0] = p.coordinates[0]
+        particles[0][p_i][1] = p.coordinates[1]
+        particles[0][p_i][2] = p.speed[0]
+        particles[0][p_i][3] = p.speed[1]
 
+        particles[1][p_i][0] = p.coordinates[0]
+        particles[1][p_i][1] = p.coordinates[1]
+        particles[1][p_i][2] = p.speed[0]
+        particles[1][p_i][3] = p.speed[1]
 
+    acceleration_list = []
+
+    for p_i in range(len(particles[0])):
+        acceleration_list.append(get_acceleration_verle(particles[0], p_masses, p_i))
+
+    for t_i, _ in enumerate(tGrid):
+        if t_i == 0:
+            continue
+
+        for p_i in range(len(particleList)):
+            old_acceleration = acceleration_list[p_i]
+
+            particles[t_i][p_i][0] += (particles[t_i][p_i][2] + old_acceleration[0] / 2) * delta_t
+            particles[t_i][p_i][1] += (particles[t_i][p_i][3] + old_acceleration[1] / 2) * delta_t
+
+            new_acceleration = get_acceleration_verle(particles[t_i], p_masses, p_i)
+
+            particles[t_i][p_i][2] += (old_acceleration[0] + new_acceleration[0]) / 2 * delta_t
+            particles[t_i][p_i][2] += (old_acceleration[1] + new_acceleration[1]) / 2 * delta_t
+
+            if t_i < len(tGrid) - 1:
+                particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
+                particles[t_i + 1][p_i][1] = particles[t_i][p_i][1]
+                particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
+                particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
+
+            acceleration_list[p_i] = new_acceleration
+
+    return particles[-1]
