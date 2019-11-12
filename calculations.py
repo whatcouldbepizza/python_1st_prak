@@ -158,14 +158,15 @@ def overall_pend(prev, t, p_masses):
                 continue
 
             distance = np.array([
-                                    prev[i * 4] - prev[j * 4],
-                                    prev[i * 4 + 1] - prev[j * 4 + 1]
+                                    math.fabs(prev[i * 4] - prev[j * 4]),
+                                    math.fabs(prev[i * 4 + 1] - prev[j * 4 + 1])
                                 ])
 
-            norm = np.linalg.norm(distance)
+            #norm = np.linalg.norm(distance)
+            norm = math.pow(math.pow(distance[0], 2) + math.pow(distance[1], 2), 3/2)
 
-            if norm <= p_masses[i] * 5 + p_masses[j] * 5:
-                continue
+            #if norm <= p_masses[i] * 5 + p_masses[j] * 5:
+            #    continue
 
             partial_acceleration += G * p_masses[j] * distance / norm
 
@@ -198,6 +199,7 @@ def overall_odeint(particleList, tGrid):
                   ])
 
     result = odeint(func=overall_pend, y0=y0, t=tGrid, args=([p.mass for _, p in enumerate(particleList)],))
+    #print(result)
 
     for i in range(len(result[-1]) // 4):
         particles.append([
@@ -207,6 +209,7 @@ def overall_odeint(particleList, tGrid):
                              result[-1][i * 4 + 3],
                          ])
 
+    #print("\n\n\n")
     return particles
 
 
@@ -220,13 +223,17 @@ def get_acceleration_verle(particleList, p_masses, index):
         if i == index:
             continue
 
-        distance = np.array([particleList[i][0] - particleList[index][0],
-                             particleList[i][1] - particleList[index][1]])
+        distance = np.array([math.fabs(particleList[i][0] - particleList[index][0]),
+                             math.fabs(particleList[i][1] - particleList[index][1])])
 
-        if np.linalg.norm(distance) <= p_masses[index] * 5 + p_masses[i] * 5:
-            continue
+        #print("Distance: " +str(distance))
 
-        res += G * p_masses[i] * distance / (np.linalg.norm(distance) ** 3)
+        #if np.linalg.norm(distance) <= p_masses[index] * 5 + p_masses[i] * 5:
+        #    continue
+
+        norm = math.pow(math.pow(distance[0], 2) + math.pow(distance[1], 2), 3/2)
+
+        res += G * p_masses[i] * distance / (norm ** 3)
 
     return res
 
@@ -266,7 +273,7 @@ def overall_verle(particleList, tGrid):
             new_acceleration = get_acceleration_verle(particles[t_i], p_masses, p_i)
 
             particles[t_i][p_i][2] += (old_acceleration[0] + new_acceleration[0]) / 2 * delta_t
-            particles[t_i][p_i][2] += (old_acceleration[1] + new_acceleration[1]) / 2 * delta_t
+            particles[t_i][p_i][3] += (old_acceleration[1] + new_acceleration[1]) / 2 * delta_t
 
             if t_i < len(tGrid) - 1:
                 particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
@@ -276,4 +283,7 @@ def overall_verle(particleList, tGrid):
 
             acceleration_list[p_i] = new_acceleration
 
+    #for r in particles:
+    #    print(r)
+    print(particles)
     return particles[-1]
