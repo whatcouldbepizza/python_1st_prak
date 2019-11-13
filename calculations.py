@@ -158,15 +158,11 @@ def overall_pend(prev, t, p_masses):
                 continue
 
             distance = np.array([
-                                    math.fabs(prev[i * 4] - prev[j * 4]),
-                                    math.fabs(prev[i * 4 + 1] - prev[j * 4 + 1])
+                                    prev[j * 4] - prev[i * 4],
+                                    prev[j * 4 + 1] - prev[i * 4 + 1]
                                 ])
 
-            #norm = np.linalg.norm(distance)
             norm = math.pow(math.pow(distance[0], 2) + math.pow(distance[1], 2), 3/2)
-
-            #if norm <= p_masses[i] * 5 + p_masses[j] * 5:
-            #    continue
 
             partial_acceleration += G * p_masses[j] * distance / norm
 
@@ -199,7 +195,6 @@ def overall_odeint(particleList, tGrid):
                   ])
 
     result = odeint(func=overall_pend, y0=y0, t=tGrid, args=([p.mass for _, p in enumerate(particleList)],))
-    #print(result)
 
     for i in range(len(result[-1]) // 4):
         particles.append([
@@ -209,8 +204,7 @@ def overall_odeint(particleList, tGrid):
                              result[-1][i * 4 + 3],
                          ])
 
-    #print("\n\n\n")
-    return particles
+    return particles, result
 
 
 def get_acceleration_verle(particleList, p_masses, index):
@@ -223,17 +217,12 @@ def get_acceleration_verle(particleList, p_masses, index):
         if i == index:
             continue
 
-        distance = np.array([math.fabs(particleList[i][0] - particleList[index][0]),
-                             math.fabs(particleList[i][1] - particleList[index][1])])
-
-        #print("Distance: " +str(distance))
-
-        #if np.linalg.norm(distance) <= p_masses[index] * 5 + p_masses[i] * 5:
-        #    continue
+        distance = np.array([particleList[i][0] - particleList[index][0],
+                             particleList[i][1] - particleList[index][1]])
 
         norm = math.pow(math.pow(distance[0], 2) + math.pow(distance[1], 2), 3/2)
 
-        res += G * p_masses[i] * distance / (norm ** 3)
+        res += G * p_masses[i] * distance / norm
 
     return res
 
@@ -255,10 +244,14 @@ def overall_verle(particleList, tGrid):
         particles[1][p_i][2] = p.speed[0]
         particles[1][p_i][3] = p.speed[1]
 
+    #print(str(particles) + "\n\n\n")
+
     acceleration_list = []
 
     for p_i in range(len(particles[0])):
-        acceleration_list.append(get_acceleration_verle(particles[0], p_masses, p_i))
+        #acceleration_list.append(get_acceleration_verle(particles[0], p_masses, p_i))
+        acceleration_list.append([0, 0])
+        #print("A: " + str(acceleration_list[p_i][0]) + " " + str(acceleration_list[p_i][1]) + "\n\n")
 
     for t_i, _ in enumerate(tGrid):
         if t_i == 0:
@@ -270,20 +263,28 @@ def overall_verle(particleList, tGrid):
             particles[t_i][p_i][0] += (particles[t_i][p_i][2] + old_acceleration[0] / 2) * delta_t
             particles[t_i][p_i][1] += (particles[t_i][p_i][3] + old_acceleration[1] / 2) * delta_t
 
-            new_acceleration = get_acceleration_verle(particles[t_i], p_masses, p_i)
+        new_acceleration_list = []
 
-            particles[t_i][p_i][2] += (old_acceleration[0] + new_acceleration[0]) / 2 * delta_t
-            particles[t_i][p_i][3] += (old_acceleration[1] + new_acceleration[1]) / 2 * delta_t
+        for p_i in range(len(particles[t_i])):
+            new_acceleration_list.append(get_acceleration_verle(particles[t_i], p_masses, p_i))
+            #print("A: " + str(new_acceleration_list[p_i][0]) + " " + str(new_acceleration_list[p_i][1]) + "\n\n")
 
-            if t_i < len(tGrid) - 1:
+            particles[t_i][p_i][2] += (acceleration_list[p_i][0] + new_acceleration_list[p_i][0]) / 2 * delta_t
+            particles[t_i][p_i][3] += (acceleration_list[p_i][1] + new_acceleration_list[p_i][1]) / 2 * delta_t
+
+        #print(acceleration_list)
+        #print(new_acceleration_list)
+
+        acceleration_list = copy.deepcopy(new_acceleration_list)
+
+        if t_i < len(tGrid) - 1:
+            for p_i in range(len(particles[t_i])):
                 particles[t_i + 1][p_i][0] = particles[t_i][p_i][0]
                 particles[t_i + 1][p_i][1] = particles[t_i][p_i][1]
                 particles[t_i + 1][p_i][2] = particles[t_i][p_i][2]
                 particles[t_i + 1][p_i][3] = particles[t_i][p_i][3]
 
-            acceleration_list[p_i] = new_acceleration
+        #print(particles[t_i])
 
-    #for r in particles:
-    #    print(r)
-    print(particles)
-    return particles[-1]
+    #print(particles)
+    return particles[-1], particles

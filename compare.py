@@ -1,5 +1,6 @@
 import numpy as np
 import datetime
+import matplotlib.pyplot as plt
 
 from calculations import supercopy, overall_odeint, overall_verle
 
@@ -15,8 +16,8 @@ def compare(particleList):
     """
     Compare odeint and Verle methods
     """
-    T = 10
-    delta_t = 5
+    T = 100000
+    delta_t = 500
     #tGrid = np.arange(0, T, delta_t)
     tGrid = np.linspace(0, T, T / delta_t + 1)
 
@@ -47,11 +48,12 @@ def compare(particleList):
     verle_list = supercopy(particleList)
 
     start_time = datetime.datetime.now()
-    odeint_result = overall_odeint(odeint_list, tGrid)
+    odeint_result, all_odeint = overall_odeint(odeint_list, tGrid)
     print("Odeint time: " + str(datetime.datetime.now() - start_time))
 
     start_time = datetime.datetime.now()
-    verle_result = overall_verle(verle_list, tGrid)
+    verle_result, all_verle = overall_verle(verle_list, tGrid)
     print("Verle time: " + str(datetime.datetime.now() - start_time))
 
-    print("odeint: " + str(odeint_result) + "\n\n\nverle: " + str(verle_result))
+    #print("odeint: " + str(odeint_result))
+    #print("\n\n\nverle: " + str(verle_result))
