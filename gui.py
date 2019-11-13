@@ -76,7 +76,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
-        delta_t = 10 if self.solar_mode else 1
+        delta_t = 0.001 if self.solar_mode else 1
 
         odeint_list = supercopy(self.particleList)
         verle_list = supercopy(self.particleListV)
@@ -90,13 +90,13 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         #    odeint_list = calculate_odeint(odeint_list, delta_t)
             #print("Odeint iteration time: {}".format(datetime.datetime.now() - start_time))
 
-        start_time = datetime.datetime.now()
+        #start_time = datetime.datetime.now()
         verle_list = calculate_verle(verle_list, delta_t)
-        print("Verle iteration: {}".format(datetime.datetime.now() - start_time))
+        #print("Verle iteration: {}".format(datetime.datetime.now() - start_time))
 
-        start_time = datetime.datetime.now()
+        #start_time = datetime.datetime.now()
         odeint_list = calculate_odeint(odeint_list, delta_t)
-        print("Odeint iteration: {}".format(datetime.datetime.now() - start_time))
+        #print("Odeint iteration: {}".format(datetime.datetime.now() - start_time))
 
         self.particleList = supercopy(odeint_list)
         self.particleListV = supercopy(verle_list)

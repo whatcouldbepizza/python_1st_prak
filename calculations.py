@@ -260,8 +260,8 @@ def overall_verle(particleList, tGrid):
         for p_i in range(len(particleList)):
             old_acceleration = acceleration_list[p_i]
 
-            particles[t_i][p_i][0] += (particles[t_i][p_i][2] + old_acceleration[0] / 2) * delta_t
-            particles[t_i][p_i][1] += (particles[t_i][p_i][3] + old_acceleration[1] / 2) * delta_t
+            particles[t_i][p_i][0] += particles[t_i][p_i][2] * delta_t + old_acceleration[0] / 2 * (delta_t ** 2)
+            particles[t_i][p_i][1] += particles[t_i][p_i][3] * delta_t + old_acceleration[1] / 2 * (delta_t ** 2)
 
         new_acceleration_list = []
 
